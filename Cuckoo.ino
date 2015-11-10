@@ -97,46 +97,39 @@ ISR(TIMER0_COMPA_vect)          // timer compare interrupt service routine
 
 void setup_timer0() {
   //set Timer0 to 8khz to change the OCR of timer2
-  TCCR0A = 0;// set entire TCCR2A register to 0
-  TCCR0B = 0;// same for TCCR2B
-  TCNT0  = 0;//initialize counter value to 0
-  // set compare match register for 8khz increments
-  OCR0A = 249;// = (16*10^6) / (8000*8) - 1 (must be <256)
-  // turn on CTC mode
-  TCCR0B |= (1 << WGM01);
-  // Set CS21 bit for 8 prescaler
-  TCCR0B |= (1 << CS01);
-  // enable timer compare interrupt
-  TIMSK0 |= (1 << OCIE0A);
+  TCCR0A = 0; //to set everything manually for timer 0
+  TCCR0B = 0;
+  
+  TCNT0  = 0; //counter starts at 0
+  OCR0A = 249; //when to toggle = (16*10^6) /((8000*8) - 1)
+  TCCR0B |= (1 << WGM01); //clear timer on compare
+  TCCR0B |= (1 << CS01); // set 1 on CS21 bit, 8 prescaler
+  TIMSK0 |= (1 << OCIE0A); //enable the interrupt
 }
 
 void setup_timer1() {
   //set timer1 interrupt at 1Hz
-  TCCR1A = 0;// set entire TCCR1A register to 0
-  TCCR1B = 0;// same for TCCR1B
-  TCNT1  = 0;//initialize counter value to 0
-  // set compare match register for 1hz increments
-  OCR1A = 15624;// = (16*10^6) / (1*1024) - 1 (must be <65536)
-  // turn on CTC mode
-  TCCR1B |= (1 << WGM12);
-  // Set CS10 and CS12 bits for 1024 prescaler
-  TCCR1B |= (1 << CS12) | (1 << CS10);
-  // enable timer compare interrupt
-  TIMSK1 |= (1 << OCIE1A);
+  TCCR1A = 0; //to set everything manually for timer 1
+  TCCR1B = 0;
+  
+  TCNT1  = 0; //counter starts at 0
+  OCR1A = 15624; //when to toggle = (16*10^6) / (1*1024) - 1
+  TCCR1B |= (1 << WGM12); //clear timer on compare
+  TCCR1B |= (1 << CS12) | (1 << CS10); // set prescaler bits for 1024
+  TIMSK1 |= (1 << OCIE1A); // enable the interrupt
 }
 
 void setup_timer2() {
 
   TCCR2A |= (1 << WGM21) | (1 << WGM20); //set fast PWM
-  TCCR2B &= ~_BV(WGM22);
+  TCCR2B &= ~(1 << WGM22);
 
 
-  TCCR2A = (TCCR2A | (1 << COM2A1)) & ~(1 << COM2A0); //non-invert. PWM (goes down after count is over) on pin 11 (speaker)
+  TCCR2A = (TCCR2A | (1 << COM2A1)) & ~(1 << COM2A0); //non-invert. PWM (sets LOW when the counter is greater than the compare register) on pin 11 (speaker)
   TCCR2A &= ~(1 << COM2B1) | (1 << COM2B0); //togle on compare match
-  TCCR2B = (TCCR2B & ~((1 << CS12) | (1 << CS11))) | _BV(CS10); //001 - no prescaler (PWM as fast as possible)
+  TCCR2B = (TCCR2B & ~((1 << CS12) | (1 << CS11))) | (1 << CS10); //001 - no prescaler (PWM as fast as possible so the waveform is smoother)
 
-  // Set initial pulse width to the first sample.
-  OCR2A = pgm_read_byte(&cuckoo_data[0]);
+  OCR2A = pgm_read_byte(&cuckoo_data[0]); //inital sample set for the comparator
 }
 
 void input_time() {
